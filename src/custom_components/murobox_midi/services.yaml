@@ -1,0 +1,23 @@
+play_chime:
+  name: Play chime
+  description: Send a BLE MIDI sequence to a configured Muro Box device.
+  target:
+    device:
+      integration: murobox_midi
+  fields:
+    midi:
+      name: MIDI string
+      description: >
+        Use note tokens such as C5/120 E5/120 G5/240 or raw hex bytes such as
+        90 48 64 80 48 00.
+      required: true
+      example: C5/120 E5/120 G5/240
+      selector:
+        text:
+    entry_id:
+      name: Config entry ID
+      description: Optional fallback when you want to target a device by config entry.
+      advanced: true
+      example: 0123456789abcdef0123456789abcdef
+      selector:
+        text:

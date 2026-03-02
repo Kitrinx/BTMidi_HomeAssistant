@@ -1,0 +1,22 @@
+{
+  "title": "Muro Box BLE MIDI",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up a Muro Box",
+        "description": "Enter the Bluetooth address for the Muro Box N-20.",
+        "data": {
+          "address": "Bluetooth address",
+          "name": "Name"
+        }
+      },
+      "bluetooth_confirm": {
+        "title": "Add discovered Muro Box",
+        "description": "Do you want to add {name} ({address})?"
+      }
+    },
+    "abort": {
+      "already_configured": "This Muro Box is already configured."
+    }
+  }
+}

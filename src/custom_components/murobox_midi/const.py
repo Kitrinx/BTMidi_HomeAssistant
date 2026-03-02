@@ -1,0 +1,20 @@
+"""Constants for the Muro Box BLE MIDI integration."""
+
+from __future__ import annotations
+
+DOMAIN = "murobox_midi"
+
+CONF_ADDRESS = "address"
+CONF_ENTRY_ID = "entry_id"
+CONF_MIDI = "midi"
+
+SERVICE_PLAY_CHIME = "play_chime"
+
+DEFAULT_NAME = "Muro Box N-20"
+DEFAULT_TEST_CHIME = "C5/120 E5/120 G5/240"
+
+DEVICE_MANUFACTURER = "Muro Box"
+DEVICE_MODEL = "N-20"
+
+BLE_MIDI_SERVICE_UUID = "03b80e5a-ede8-4b33-a751-6ce34ec4c700"
+BLE_MIDI_CHARACTERISTIC_UUID = "7772e5db-3868-4112-a1a9-f2669d106bf3"

@@ -1,0 +1,26 @@
+{
+  "domain": "murobox_midi",
+  "name": "Muro Box BLE MIDI",
+  "bluetooth": [
+    {
+      "service_uuid": "03b80e5a-ede8-4b33-a751-6ce34ec4c700"
+    },
+    {
+      "local_name": "Muro Box*"
+    }
+  ],
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth"
+  ],
+  "documentation": "https://github.com/kitrinx/btmidi_homeassistant",
+  "integration_type": "device",
+  "issue_tracker": "https://github.com/kitrinx/btmidi_homeassistant/issues",
+  "iot_class": "local_push",
+  "loggers": [
+    "bleak"
+  ],
+  "requirements": [],
+  "version": "0.1.0"
+}
