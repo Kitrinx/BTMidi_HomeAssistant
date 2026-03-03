@@ -1,0 +1,20 @@
+alias: Muro Box Chime 1
+description: Front door chime, bright rising arpeggio.
+icon: mdi:doorbell
+mode: single
+fields:
+  entry_id:
+    name: Config entry ID
+    description: Leave blank if only one Muro Box is configured.
+    example: 0123456789abcdef0123456789abcdef
+    selector:
+      text:
+sequence:
+  - service: murobox_midi.play_chime
+    data:
+      entry_id: "{{ entry_id | default('', true) }}"
+      midi: >-
+        C6/300 E6/300 G6/500 R/200 E6/300 G6/300 A6/700 R/400
+        C6/300 E6/300 G6/500 R/200 E6/300 G6/300 A6/700 R/400
+        C6/300 E6/300 G6/500 R/200 E6/300 G6/300 C6/900 R/500
+        C6/300 E6/300 G6/500 R/200 E6/300 G6/300 C6/900 R/500

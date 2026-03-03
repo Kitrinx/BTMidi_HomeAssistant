@@ -36,27 +36,24 @@ class MuroBoxClient:
         """Send a sequence of timed MIDI messages."""
         async with self._play_lock:
             client = await self._async_ensure_connected()
+            try:
+                for timed_message in messages:
+                    if timed_message.data:
+                        try:
+                            await self._async_write_message(client, timed_message.data)
+                        except Exception as err:
+                            raise HomeAssistantError(
+                                f"Unable to send BLE MIDI data to {self.name}"
+                            ) from err
 
-            for timed_message in messages:
-                if timed_message.data:
-                    packet = encode_ble_midi_packet(
-                        timed_message.data,
-                        int(time.monotonic() * 1000),
-                    )
-                    try:
-                        await client.write_gatt_char(
-                            BLE_MIDI_CHARACTERISTIC_UUID,
-                            packet,
-                            response=False,
-                        )
-                    except Exception as err:
-                        await self.async_disconnect()
-                        raise HomeAssistantError(
-                            f"Unable to send BLE MIDI data to {self.name}"
-                        ) from err
-
-                if timed_message.delay_after_ms:
-                    await asyncio.sleep(timed_message.delay_after_ms / 1000)
+                    if timed_message.delay_after_ms:
+                        await asyncio.sleep(timed_message.delay_after_ms / 1000)
+            finally:
+                # Some BLE MIDI receivers remain in an "active" playback state
+                # until they receive an explicit note cleanup and the session ends.
+                with suppress(Exception):
+                    await self._async_send_cleanup(client)
+                await self.async_disconnect()
 
     async def async_disconnect(self) -> None:
         """Tear down the BLE connection if one is open."""
@@ -96,6 +93,23 @@ class MuroBoxClient:
             self._client = client
             return client
 
+    async def _async_write_message(self, client: BleakClient, message: bytes) -> None:
+        """Encode and send a single raw MIDI message."""
+        packet = encode_ble_midi_packet(
+            message,
+            int(time.monotonic() * 1000),
+        )
+        await client.write_gatt_char(
+            BLE_MIDI_CHARACTERISTIC_UUID,
+            packet,
+            response=False,
+        )
+
+    async def _async_send_cleanup(self, client: BleakClient) -> None:
+        """Send a best-effort stop sequence before disconnecting."""
+        for cleanup_message in _cleanup_messages():
+            await self._async_write_message(client, cleanup_message)
+
 
 @dataclass(slots=True)
 class MuroBoxRuntime:
@@ -110,3 +124,12 @@ class MuroBoxRuntime:
     def device_identifiers(self) -> set[tuple[str, str]]:
         """Return the Home Assistant device identifiers for this runtime."""
         return {(DOMAIN, self.entry_id)}
+
+
+def _cleanup_messages() -> tuple[bytes, ...]:
+    """Return a short controller reset sequence for the default MIDI channel."""
+    return (
+        bytes((0xB0, 0x40, 0x00)),  # Sustain pedal off
+        bytes((0xB0, 0x7B, 0x00)),  # All notes off
+        bytes((0xB0, 0x78, 0x00)),  # All sound off
+    )

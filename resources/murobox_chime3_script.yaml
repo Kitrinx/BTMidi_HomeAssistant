@@ -1,0 +1,19 @@
+alias: Muro Box Chime 3
+description: Appliance done chime, warm descending cadence.
+icon: mdi:washing-machine
+mode: single
+fields:
+  entry_id:
+    name: Config entry ID
+    description: Leave blank if only one Muro Box is configured.
+    example: 0123456789abcdef0123456789abcdef
+    selector:
+      text:
+sequence:
+  - service: murobox_midi.play_chime
+    data:
+      entry_id: "{{ entry_id | default('', true) }}"
+      midi: >-
+        A6/280 G6/280 E6/360 C6/520 R/220 E6/280 G6/280 E6/420 C6/760 R/380
+        A6/280 G6/280 E6/360 C6/520 R/220 E6/280 G6/280 E6/420 C6/760 R/380
+        G6/280 E6/280 C6/360 G5/520 R/220 E6/280 C6/280 G5/520 C6/900 R/420

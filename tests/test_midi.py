@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from murobox_midi_core.midi import TimedMidiMessage, parse_midi_spec
+from custom_components.murobox_midi.midi_spec import TimedMidiMessage, parse_midi_spec
 
 
 def test_parse_note_sequence_creates_note_on_and_off_pairs() -> None:

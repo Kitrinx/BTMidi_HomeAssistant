@@ -2,15 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import voluptuous as vol
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from typing import TYPE_CHECKING, Any
 
 from .const import (
     CONF_ADDRESS,
@@ -22,16 +14,12 @@ from .const import (
     DOMAIN,
     SERVICE_PLAY_CHIME,
 )
-from .device import MuroBoxClient, MuroBoxRuntime
 
-PLATFORMS: list[Platform] = [Platform.BUTTON]
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ENTRY_ID): str,
-        vol.Required(CONF_MIDI): str,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
+
+    from .device import MuroBoxClient
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
@@ -43,7 +31,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
             DOMAIN,
             SERVICE_PLAY_CHIME,
             _build_play_service_handler(hass),
-            schema=SERVICE_SCHEMA,
+            schema=_service_schema(),
         )
 
     return True
@@ -51,6 +39,11 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    from homeassistant.const import CONF_NAME
+    from homeassistant.helpers import device_registry as dr
+
+    from .device import MuroBoxClient, MuroBoxRuntime
+
     address = entry.data[CONF_ADDRESS]
     name = entry.data.get(CONF_NAME, DEFAULT_NAME)
     runtime = MuroBoxRuntime(
@@ -71,13 +64,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=name,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, _platforms())
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, _platforms())
     if not unload_ok:
         return False
 
@@ -102,7 +95,11 @@ def _resolve_target_clients(
     call: ServiceCall,
 ) -> list[MuroBoxClient]:
     """Find the runtime clients targeted by a service call."""
-    runtimes: dict[str, MuroBoxRuntime] = hass.data.get(DOMAIN, {})
+    from homeassistant.const import ATTR_DEVICE_ID
+    from homeassistant.exceptions import HomeAssistantError
+    from homeassistant.helpers import device_registry as dr
+
+    runtimes = hass.data.get(DOMAIN, {})
     if not runtimes:
         raise HomeAssistantError("No Muro Box devices are configured")
 
@@ -149,4 +146,24 @@ def _resolve_target_clients(
 
     raise HomeAssistantError(
         "Specify entry_id or target a Muro Box device when more than one device is configured"
+    )
+
+
+def _platforms():
+    """Return the platforms used by this integration."""
+    from homeassistant.const import Platform
+
+    return [Platform.BUTTON]
+
+
+def _service_schema():
+    """Build the play_chime service schema lazily."""
+    import voluptuous as vol
+
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ENTRY_ID): str,
+            vol.Required(CONF_MIDI): str,
+        },
+        extra=vol.ALLOW_EXTRA,
     )

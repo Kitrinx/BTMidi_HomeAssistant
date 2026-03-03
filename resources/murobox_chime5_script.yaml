@@ -1,0 +1,22 @@
+alias: Muro Box Chime 5
+description: Priority alert chime, clear and insistent.
+icon: mdi:alert
+mode: single
+fields:
+  entry_id:
+    name: Config entry ID
+    description: Leave blank if only one Muro Box is configured.
+    example: 0123456789abcdef0123456789abcdef
+    selector:
+      text:
+sequence:
+  - service: murobox_midi.play_chime
+    data:
+      entry_id: "{{ entry_id | default('', true) }}"
+      midi: >-
+        A6/300 R/180 A6/300 R/180 G6/360 E6/520 R/220
+        A6/300 R/180 A6/300 R/180 G6/360 C6/760 R/420
+        A6/300 R/180 A6/300 R/180 G6/360 E6/520 R/220
+        A6/300 R/180 A6/300 R/180 G6/360 C6/760 R/420
+        A6/300 R/180 A6/300 R/180 G6/360 E6/520 R/220
+        G6/320 E6/320 C6/900 R/500

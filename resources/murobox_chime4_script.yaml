@@ -1,0 +1,21 @@
+alias: Muro Box Chime 4
+description: Reminder chime, gentle looping pattern.
+icon: mdi:calendar-clock
+mode: single
+fields:
+  entry_id:
+    name: Config entry ID
+    description: Leave blank if only one Muro Box is configured.
+    example: 0123456789abcdef0123456789abcdef
+    selector:
+      text:
+sequence:
+  - service: murobox_midi.play_chime
+    data:
+      entry_id: "{{ entry_id | default('', true) }}"
+      midi: >-
+        C6/280 D6/280 E6/280 G6/420 E6/280 D6/280 C6/540 R/260
+        A5/280 C6/280 E6/280 G6/540 R/380
+        C6/280 D6/280 E6/280 G6/420 E6/280 D6/280 C6/540 R/260
+        A5/280 C6/280 E6/280 G6/540 R/380
+        A5/300 C6/300 E6/300 G6/500 E6/300 C6/300 A5/700 R/500

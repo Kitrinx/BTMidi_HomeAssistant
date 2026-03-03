@@ -1,0 +1,19 @@
+alias: Muro Box Chime 6
+description: Quiet mode or bedtime chime, soft descending motif.
+icon: mdi:sleep
+mode: single
+fields:
+  entry_id:
+    name: Config entry ID
+    description: Leave blank if only one Muro Box is configured.
+    example: 0123456789abcdef0123456789abcdef
+    selector:
+      text:
+sequence:
+  - service: murobox_midi.play_chime
+    data:
+      entry_id: "{{ entry_id | default('', true) }}"
+      midi: >-
+        G5/320 C6/320 E6/420 D6/320 C6/520 R/220 E6/320 D6/320 C6/620 R/420
+        G5/320 C6/320 E6/420 D6/320 C6/520 R/220 E6/320 D6/320 C6/620 R/420
+        G5/320 C6/320 E6/420 D6/320 C6/520 R/220 E6/320 D6/320 C6/620 R/420

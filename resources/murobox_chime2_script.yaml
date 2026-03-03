@@ -1,0 +1,20 @@
+alias: Muro Box Chime 2
+description: Motion detected chime, crisp repeating pulse.
+icon: mdi:motion-sensor
+mode: single
+fields:
+  entry_id:
+    name: Config entry ID
+    description: Leave blank if only one Muro Box is configured.
+    example: 0123456789abcdef0123456789abcdef
+    selector:
+      text:
+sequence:
+  - service: murobox_midi.play_chime
+    data:
+      entry_id: "{{ entry_id | default('', true) }}"
+      midi: >-
+        A6/280 E6/280 G6/280 E6/420 R/180 A6/280 E6/280 G6/280 E6/640 R/320
+        A6/280 E6/280 G6/280 E6/420 R/180 A6/280 E6/280 G6/280 E6/640 R/320
+        A6/280 E6/280 G6/280 E6/420 R/180 A6/280 E6/280 G6/280 E6/640 R/320
+        A6/280 G6/280 E6/320 C6/700 R/220 G6/280 E6/280 C6/900 R/400

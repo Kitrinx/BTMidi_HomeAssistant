@@ -49,6 +49,11 @@ Notes use `NOTE/DURATION_MS@VELOCITY`:
 - `C5/120@96`
 - `R/100` for a rest
 
+Preset Home Assistant scripts for six longer notification chimes are included in
+[resources/home_assistant_scripts.yaml](C:/Users/Kitrinx/workspace/kitrinx/btmidi_homeassistant/resources/home_assistant_scripts.yaml).
+Copy those entries into your Home Assistant `scripts.yaml`, then call
+`script.murobox_chime1` through `script.murobox_chime6` from automations.
+
 ## Development
 
 Bootstrap the local test environment:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from murobox_midi_core.ble_midi import encode_ble_midi_packet
+from custom_components.murobox_midi.ble_midi import encode_ble_midi_packet
 
 
 def test_encode_ble_midi_packet_adds_timestamp_prefix() -> None:

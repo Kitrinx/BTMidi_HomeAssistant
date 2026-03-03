@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "murobox-midi-homeassistant"
-version = "0.1.0"
+version = "0.1.1"
 description = "Scaffold for a Home Assistant BLE MIDI integration targeting the Muro Box N-20."
 requires-python = ">=3.12"
 
@@ -15,8 +15,4 @@ test = [
 ]
 
 [tool.setuptools]
-package-dir = {"" = "../src"}
-
-[tool.setuptools.packages.find]
-where = ["../src"]
-include = ["murobox_midi_core*"]
+packages = []
