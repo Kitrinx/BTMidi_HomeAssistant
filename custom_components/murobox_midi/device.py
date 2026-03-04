@@ -48,11 +48,14 @@ class MuroBoxClient:
 
                     if timed_message.delay_after_ms:
                         await asyncio.sleep(timed_message.delay_after_ms / 1000)
-            finally:
-                # Some BLE MIDI receivers remain in an "active" playback state
-                # until they receive an explicit note cleanup and the session ends.
-                with suppress(Exception):
-                    await self._async_send_cleanup(client)
+            except Exception:
+                await self.async_disconnect()
+                raise
+
+            # Keep the BLE session open after playback so we can test whether
+            # an explicit all-channel "all sound off" is enough to stop motion.
+            with suppress(Exception):
+                await self._async_send_cleanup(client)
                 await self.async_disconnect()
 
     async def async_disconnect(self) -> None:
@@ -106,7 +109,7 @@ class MuroBoxClient:
         )
 
     async def _async_send_cleanup(self, client: BleakClient) -> None:
-        """Send a best-effort stop sequence before disconnecting."""
+        """Send a best-effort stop sequence after playback."""
         for cleanup_message in _cleanup_messages():
             await self._async_write_message(client, cleanup_message)
 
@@ -127,9 +130,8 @@ class MuroBoxRuntime:
 
 
 def _cleanup_messages() -> tuple[bytes, ...]:
-    """Return a short controller reset sequence for the default MIDI channel."""
-    return (
-        bytes((0xB0, 0x40, 0x00)),  # Sustain pedal off
-        bytes((0xB0, 0x7B, 0x00)),  # All notes off
-        bytes((0xB0, 0x78, 0x00)),  # All sound off
+    """Broadcast All Sound Off on every MIDI channel."""
+    return tuple(
+        bytes((0xB0 | channel, 0x78, 0x00))
+        for channel in range(16)
     )
