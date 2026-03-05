@@ -54,6 +54,19 @@ Preset Home Assistant scripts for six longer notification chimes are included in
 Copy those entries into your Home Assistant `scripts.yaml`, then call
 `script.murobox_chime1` through `script.murobox_chime6` from automations.
 
+## Integration Icon
+
+The Home Assistant integration icon/logo assets are bundled directly in:
+
+- `src/custom_components/murobox_midi/brand/`
+
+and distributed for HACS from:
+
+- `custom_components/murobox_midi/brand/`
+
+Keep those files in sync by running `.\build\sync_hacs_package.ps1` after icon
+changes.
+
 ## Development
 
 Bootstrap the local test environment:

@@ -56,7 +56,6 @@ class MuroBoxClient:
             # an explicit all-channel "all sound off" is enough to stop motion.
             with suppress(Exception):
                 await self._async_send_cleanup(client)
-                await self.async_disconnect()
 
     async def async_disconnect(self) -> None:
         """Tear down the BLE connection if one is open."""
