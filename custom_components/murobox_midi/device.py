@@ -13,18 +13,40 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .ble_midi import encode_ble_midi_packet
-from .const import BLE_MIDI_CHARACTERISTIC_UUID, DOMAIN
+from .const import (
+    BLE_MIDI_CHARACTERISTIC_UUID,
+    DEFAULT_DISCONNECT_MODE,
+    DEFAULT_IDLE_DISCONNECT_SECONDS,
+    DISCONNECT_MODE_DELAYED,
+    DISCONNECT_MODE_IMMEDIATE,
+    DOMAIN,
+    VALID_DISCONNECT_MODES,
+)
 from .midi_spec import TimedMidiMessage, parse_midi_spec
 
 
 class MuroBoxClient:
     """Thin async BLE MIDI client for one Muro Box device."""
 
-    def __init__(self, hass: HomeAssistant, address: str, name: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        address: str,
+        name: str,
+        disconnect_mode: str = DEFAULT_DISCONNECT_MODE,
+        idle_disconnect_seconds: int = DEFAULT_IDLE_DISCONNECT_SECONDS,
+    ) -> None:
         self.hass = hass
         self.address = address
         self.name = name
+        self.disconnect_mode = (
+            disconnect_mode
+            if disconnect_mode in VALID_DISCONNECT_MODES
+            else DEFAULT_DISCONNECT_MODE
+        )
+        self.idle_disconnect_seconds = max(1, int(idle_disconnect_seconds))
         self._client: BleakClient | None = None
+        self._idle_disconnect_task: asyncio.Task[None] | None = None
         self._connect_lock = asyncio.Lock()
         self._play_lock = asyncio.Lock()
 
@@ -35,6 +57,7 @@ class MuroBoxClient:
     async def async_play_messages(self, messages: list[TimedMidiMessage]) -> None:
         """Send a sequence of timed MIDI messages."""
         async with self._play_lock:
+            self._cancel_idle_disconnect_timer()
             client = await self._async_ensure_connected()
             try:
                 for timed_message in messages:
@@ -52,13 +75,15 @@ class MuroBoxClient:
                 await self.async_disconnect()
                 raise
 
-            # Keep the BLE session open after playback so we can test whether
-            # an explicit all-channel "all sound off" is enough to stop motion.
+            # Send a best-effort note cleanup, then apply user-selected
+            # post-playback disconnect behavior.
             with suppress(Exception):
                 await self._async_send_cleanup(client)
+            await self._async_apply_disconnect_policy()
 
     async def async_disconnect(self) -> None:
         """Tear down the BLE connection if one is open."""
+        self._cancel_idle_disconnect_timer()
         async with self._connect_lock:
             if self._client is None:
                 return
@@ -111,6 +136,43 @@ class MuroBoxClient:
         """Send a best-effort stop sequence after playback."""
         for cleanup_message in _cleanup_messages():
             await self._async_write_message(client, cleanup_message)
+
+    async def _async_apply_disconnect_policy(self) -> None:
+        """Apply the configured post-playback disconnect behavior."""
+        if self.disconnect_mode == DISCONNECT_MODE_IMMEDIATE:
+            await self.async_disconnect()
+            return
+
+        if self.disconnect_mode == DISCONNECT_MODE_DELAYED:
+            self._schedule_idle_disconnect()
+
+    def _schedule_idle_disconnect(self) -> None:
+        """Start or reset the delayed idle-disconnect timer."""
+        self._cancel_idle_disconnect_timer()
+        self._idle_disconnect_task = self.hass.async_create_task(
+            self._async_delayed_disconnect()
+        )
+
+    async def _async_delayed_disconnect(self) -> None:
+        """Disconnect after the configured idle timeout."""
+        try:
+            await asyncio.sleep(self.idle_disconnect_seconds)
+            async with self._play_lock:
+                await self.async_disconnect()
+        except asyncio.CancelledError:
+            return
+        finally:
+            if self._idle_disconnect_task is asyncio.current_task():
+                self._idle_disconnect_task = None
+
+    def _cancel_idle_disconnect_timer(self) -> None:
+        """Cancel any pending delayed disconnect timer."""
+        task = self._idle_disconnect_task
+        self._idle_disconnect_task = None
+        if task is None or task.done():
+            return
+        if task is not asyncio.current_task():
+            task.cancel()
 
 
 @dataclass(slots=True)

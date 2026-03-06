@@ -6,8 +6,12 @@ from typing import TYPE_CHECKING, Any
 
 from .const import (
     CONF_ADDRESS,
+    CONF_DISCONNECT_MODE,
     CONF_ENTRY_ID,
+    CONF_IDLE_DISCONNECT_SECONDS,
     CONF_MIDI,
+    DEFAULT_DISCONNECT_MODE,
+    DEFAULT_IDLE_DISCONNECT_SECONDS,
     DEFAULT_NAME,
     DEVICE_MANUFACTURER,
     DEVICE_MODEL,
@@ -46,13 +50,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     address = entry.data[CONF_ADDRESS]
     name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+    disconnect_mode = entry.options.get(CONF_DISCONNECT_MODE, DEFAULT_DISCONNECT_MODE)
+    idle_disconnect_seconds = int(
+        entry.options.get(
+            CONF_IDLE_DISCONNECT_SECONDS,
+            DEFAULT_IDLE_DISCONNECT_SECONDS,
+        )
+    )
     runtime = MuroBoxRuntime(
         entry_id=entry.entry_id,
         address=address,
         name=name,
-        client=MuroBoxClient(hass, address, name),
+        client=MuroBoxClient(
+            hass,
+            address,
+            name,
+            disconnect_mode=disconnect_mode,
+            idle_disconnect_seconds=idle_disconnect_seconds,
+        ),
     )
     hass.data[DOMAIN][entry.entry_id] = runtime
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -167,3 +185,8 @@ def _service_schema():
         },
         extra=vol.ALLOW_EXTRA,
     )
+
+
+async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry when options are changed from the UI."""
+    await hass.config_entries.async_reload(entry.entry_id)

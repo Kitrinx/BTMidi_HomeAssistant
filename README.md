@@ -12,6 +12,10 @@ This repository is structured for two use cases:
 
 - Config flow with manual Bluetooth address entry and Bluetooth discovery.
 - `murobox_midi.play_chime` service for automations.
+- Configurable disconnect behavior per device:
+  - immediately after each chime
+  - after a configurable idle timeout
+  - never (keep connected)
 - Note-string input such as `C5/120 E5/120 G5/240`.
 - Raw MIDI hex input such as `90 48 64 80 48 00`.
 - Diagnostic button entity to trigger a built-in test chime.

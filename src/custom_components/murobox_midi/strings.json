@@ -18,5 +18,17 @@
     "abort": {
       "already_configured": "This Muro Box is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Connection behavior",
+        "description": "Choose when Bluetooth should disconnect after a chime. Idle timeout is only used for delayed mode.",
+        "data": {
+          "disconnect_mode": "Disconnect mode",
+          "idle_disconnect_seconds": "Idle disconnect seconds"
+        }
+      }
+    }
   }
 }
